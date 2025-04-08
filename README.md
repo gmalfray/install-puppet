@@ -28,17 +28,17 @@ script which can be used with little to no external dependencies
 
 ### Install with curl
 ```sh
-curl -sSL https://raw.githubusercontent.com/puppetlabs/install-puppet/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/gmalfray/install-puppet/main/install.sh | bash
 ```
 
 ### Install with wget
 ```sh
-wget -qO - https://raw.githubusercontent.com/puppetlabs/install-puppet/main/install.sh | bash
+wget -qO - https://raw.githubusercontent.com/gmalfray/install-puppet/main/install.sh | bash
 ```
 
 Piping to `bash` is a controversial practice, so you are encouraged to inspect
 the [contents of the
-script](https://github.com/puppetlabs/install-puppet/blob/main/install.sh)
+script](https://github.com/gmalfray/install-puppet/blob/main/install.sh)
 before executing it.
 
 
@@ -48,7 +48,7 @@ If run with no arguments, the script will install the latest stable version of p
 
 You can install a specific version using:
 ```sh
-curl -sSL https://raw.githubusercontent.com/puppetlabs/install-puppet/main/install.sh | bash -s -- -v 6.24.0
+curl -sSL https://raw.githubusercontent.com/gmalfray/install-puppet/main/install.sh | bash -s -- -v 6.24.0
 ```
 
 Below is the full list of configurable options:

@@ -10,8 +10,8 @@ function usage()
 
    optional arguments:
      -h, --help                   show this help message and exit
-     -v, --version VERSION        install a specific puppet-agent version
-     -c, --collection COLLECTION  install a specific puppet-agent collection (e.g. puppet7)
+     -v, --version VERSION        install a specific openvox-agent version
+     -c, --collection COLLECTION  install a specific openvox-agent collection (e.g. puppet7)
      -n, --noop                   do a dry run, do not change any files 
      --cleanup                    remove the puppetlabs repository after installation finishes
 
@@ -22,11 +22,11 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
       -v|--version) PT_version="$2"; shift ;
          if beginswith "6." "$PT_version"; then
-           PT_collection="puppet6"
+           PT_collection="openvox6"
          elif beginswith "7." "$PT_version"; then
-           PT_collection="puppet7"
+           PT_collection="openvox7"
          else
-           PT_collection="puppet"
+           PT_collection="openvox"
          fi ;;
       -c|--collection) PT_collection="$2"; shift ;;
       --cleanup) PT_cleanup=true; shift ;;
@@ -67,14 +67,14 @@ success() {
 }
 
 determine_command_for_facter_4() {
-  puppet_version="$(puppet --version)"
+  openvox_version="$(openvox --version)"
 
-  if (( ${puppet_version%%.*} == 6 )); then
-    # puppet 6 with facter 4
+  if (( ${openvox_version%%.*} == 6 )); then
+    # openvox 6 with facter 4
     facts_command=(facter --json --show-legacy)
   else
-    # puppet 7 with facter 4
-    facts_command=(puppet facts show --show-legacy --render-as json)
+    # openvox 7 with facter 4
+    facts_command=(openvox facts show --show-legacy --render-as json)
   fi
 }
 
@@ -234,9 +234,9 @@ ID="$(munge_name "$ID")"
 family="$(munge_name "$family")"
 
 #!/usr/bin/env bash
-# Install puppet-agent as a task
+# Install openvox-agent as a task
 #
-# From https://github.com/petems/puppet-install-shell/blob/master/install_puppet_5_agent.sh
+# From https://github.com/petems/openvox-install-shell/blob/master/install_puppet_5_agent.sh
 
 # Timestamp
 now () {
@@ -274,24 +274,24 @@ exists() {
 
 # Check whether the apt config file has been modified, warning and exiting early if it has
 assert_unmodified_apt_config() {
-  puppet_list=/etc/apt/sources.list.d/puppet.list
-  puppet7_list=/etc/apt/sources.list.d/puppet7.list
-  puppet8_list=/etc/apt/sources.list.d/puppet8.list
+  openvox_list=/etc/apt/sources.list.d/openvox.list
+  openvox7_list=/etc/apt/sources.list.d/openvox7.list
+  openvox8_list=/etc/apt/sources.list.d/openvox8.list
 
-  if [[ -f $puppet_list ]]; then
-    list_file=puppet_list
-  elif [[ -f $puppet7_list ]]; then
-    list_file=puppet7_list
-  elif [[ -f $puppet8_list ]]; then
-    list_file=puppet8_list
+  if [[ -f $openvox_list ]]; then
+    list_file=openvox_list
+  elif [[ -f $openvox7_list ]]; then
+    list_file=openvox7_list
+  elif [[ -f $openvox8_list ]]; then
+    list_file=openvox8_list
   fi
 
-  # If puppet.list exists, get its md5sum on disk and its md5sum from the puppet-release package
+  # If openvox.list exists, get its md5sum on disk and its md5sum from the openvox-release package
   if [[ -n $list_file ]]; then
     # For md5sum, the checksum is the first word
     file_md5=($(md5sum "$list_file"))
     # For dpkg-query with this output format, the sum is the second word
-    package_md5=($(dpkg-query -W -f='${Conffiles}\n' 'puppet-release' | grep -F "$list_file"))
+    package_md5=($(dpkg-query -W -f='${Conffiles}\n' 'openvox-release' | grep -F "$list_file"))
 
     # If the $package_md5 array is set, and the md5sum on disk doesn't match the md5sum from dpkg-query, it has been modified
     if [[ $package_md5 && ${file_md5[0]} != ${package_md5[1]} ]]; then
@@ -337,7 +337,7 @@ if [ -n "$PT_collection" ]; then
 
   collection=$PT_collection
 else
-  collection='puppet'
+  collection='openvox'
 fi
 
 if [ -n "$PT_yum_source" ]; then
@@ -346,7 +346,7 @@ else
   if [ "$nightly" = true ]; then
     yum_source='https://artifactory.delivery.puppetlabs.net:443/artifactory/internal_nightly__local/yum'
   else
-    yum_source='http://yum.puppet.com'
+    yum_source='http://yum.openvox.com'
   fi
 fi
 
@@ -354,9 +354,9 @@ if [ -n "$PT_apt_source" ]; then
   apt_source=$PT_apt_source
 else
   if [ "$nightly" = true ]; then
-    apt_source='http://nightlies.puppet.com/apt'
+    apt_source='http://nightlies.openvox.com/apt'
   else
-    apt_source='http://apt.puppet.com'
+    apt_source='https://apt.overlookinfratech.com'
   fi
 fi
 
@@ -366,7 +366,7 @@ else
   if [ "$nightly" = true ]; then
     mac_source='https://artifactory.delivery.puppetlabs.net:443/artifactory/internal_nightly__local/downloads'
   else
-    mac_source='http://downloads.puppet.com'
+    mac_source='https://downloads.voxpupuli.org'
   fi
 fi
 
@@ -376,11 +376,11 @@ else
   retry=5
 fi
 
-# Track to handle puppet5 to puppet6
-if [ -f /opt/puppetlabs/puppet/VERSION ]; then
-  installed_version=`cat /opt/puppetlabs/puppet/VERSION`
-elif type -p puppet >/dev/null; then
-  installed_version=`puppet --version`
+# Track to handle openvox5 to openvox6
+if [ -f /opt/puppetlabs/openvox/VERSION ]; then
+  installed_version=`cat /opt/puppetlabs/openvox/VERSION`
+elif type -p openvox >/dev/null; then
+  installed_version=`openvox --version`
 else
   installed_version=uninstalled
 fi
@@ -522,7 +522,7 @@ case $platform in
     ;;
 esac
 
-# Find which version of puppet is currently installed if any
+# Find which version of openvox is currently installed if any
 
 if test "x$platform_version" = "x"; then
   critical "Unable to determine platform version!"
@@ -774,22 +774,22 @@ install_file() {
       if test "x$installed_version" != "xuninstalled"; then
         info "Version ${installed_version} detected..."
         major=$(echo $installed_version | cut -d. -f1)
-        pkg="puppet${major}-release"
+        pkg="openvox${major}-release"
 
         if echo $2 | grep $pkg; then
           info "No collection upgrade detected"
         else
-          info "Collection upgrade detected, replacing puppet${major}-release"
-          rpm -e "puppet${major}-release"
+          info "Collection upgrade detected, replacing openvox${major}-release"
+          rpm -e "openvox${major}-release"
         fi
       fi
 
       rpm -Uvh --oldpackage --replacepkgs "$2"
       exists dnf && PKGCMD=dnf || PKGCMD=yum
       if test "$version" = 'latest'; then
-        run_cmd "${PKGCMD} install -y puppet-agent && ${PKGCMD} upgrade -y puppet-agent"
+        run_cmd "${PKGCMD} install -y openvox-agent && ${PKGCMD} upgrade -y openvox-agent"
       else
-        run_cmd "${PKGCMD} install -y 'puppet-agent-${puppet_agent_version}'"
+        run_cmd "${PKGCMD} install -y 'openvox-agent-${puppet_agent_version}'"
       fi
       ;;
     "noarch.rpm")
@@ -798,21 +798,21 @@ install_file() {
       if test "x$installed_version" != "xuninstalled"; then
         info "Version ${installed_version} detected..."
         major=$(echo $installed_version | cut -d. -f1)
-        pkg="puppet${major}-release"
+        pkg="openvox${major}-release"
 
         if echo $2 | grep $pkg; then
           info "No collection upgrade detected"
         else
-          info "Collection upgrade detected, replacing puppet${major}-release"
-          zypper remove --no-confirm "puppet${major}-release"
+          info "Collection upgrade detected, replacing openvox${major}-release"
+          zypper remove --no-confirm "openvox${major}-release"
         fi
       fi
 
       run_cmd "zypper install --no-confirm '$2'"
       if test "$version" = "latest"; then
-        run_cmd "zypper install --no-confirm 'puppet-agent'"
+        run_cmd "zypper install --no-confirm 'openvox-agent'"
       else
-        run_cmd "zypper install --no-confirm --oldpackage --no-recommends --no-confirm 'puppet-agent-${puppet_agent_version}'"
+        run_cmd "zypper install --no-confirm --oldpackage --no-recommends --no-confirm 'openvox-agent-${puppet_agent_version}'"
       fi
       ;;
     "deb")
@@ -821,13 +821,13 @@ install_file() {
       if test "x$installed_version" != "xuninstalled"; then
         info "Version ${installed_version} detected..."
         major=$(echo $installed_version | cut -d. -f1)
-        pkg="puppet${major}-release"
+        pkg="openvox${major}-release"
 
         if echo $2 | grep $pkg; then
           info "No collection upgrade detected"
         else
-          info "Collection upgrade detected, replacing puppet${major}-release"
-          dpkg --purge "puppet${major}-release"
+          info "Collection upgrade detected, replacing openvox${major}-release"
+          dpkg --purge "openvox${major}-release"
         fi
       fi
 
@@ -837,12 +837,12 @@ install_file() {
       run_cmd 'apt-get update -y'
 
       if test "$version" = 'latest'; then
-        run_cmd "apt-get install -y puppet-agent"
+        run_cmd "apt-get install -y openvox-agent"
       else
         if test "x$deb_codename" != "x"; then
-          run_cmd "apt-get install -y 'puppet-agent=${puppet_agent_version}-1${deb_codename}'"
+          run_cmd "apt-get install -y 'openvox-agent=${puppet_agent_version}-1${deb_codename}'"
         else
-          run_cmd "apt-get install -y 'puppet-agent=${puppet_agent_version}'"
+          run_cmd "apt-get install -y 'openvox-agent=${puppet_agent_version}'"
         fi
       fi
       ;;
@@ -850,7 +850,7 @@ install_file() {
       info "installing puppetlabs dmg with hdiutil and installer"
       mountpoint="$(mktemp -d -t $(random_hexdump))"
       /usr/bin/hdiutil attach "${download_filename?}" -nobrowse -readonly -mountpoint "${mountpoint?}"
-      /usr/sbin/installer -pkg ${mountpoint?}/puppet-agent-*-installer.pkg -target /
+      /usr/sbin/installer -pkg ${mountpoint?}/openvox-agent-*-installer.pkg -target /
       /usr/bin/hdiutil detach "${mountpoint?}"
       rm -f $download_filename
       ;;
@@ -871,9 +871,9 @@ case $platform in
     info "SLES platform! Lets get you an RPM..."
 
     if [[ $PT__noop != true ]]; then
-      for key in "puppet" "puppet-20250406"; do
+      for key in "openvox" "openvox-20250406"; do
         gpg_key="${tmp_dir}/RPM-GPG-KEY-${key}"
-        do_download "https://yum.puppet.com/RPM-GPG-KEY-${key}" "$gpg_key"
+        do_download "https://yum.overlookinfratech.com/RPM-GPG-KEY-${key}" "$gpg_key"
         rpm --import "$gpg_key"
         rm -f "$gpg_key"
       done
@@ -917,7 +917,7 @@ case $platform in
       "12") deb_codename="bookworm";;
     esac
     filetype="deb"
-    filename="${collection}-release-${deb_codename}.deb"
+    filename="${collection}-release-debian${major_version}.deb"
     download_url="${apt_source}/${filename}"
     ;;
   "Linuxmint"|"LinuxMint")
@@ -934,7 +934,7 @@ case $platform in
       "17") deb_codename="trusty";;
     esac
     filetype="deb"
-    filename="${collection}-release-${deb_codename}.deb"
+    filename="${collection}-release-debian${major_version}.deb"
     download_url="${apt_source}/${filename}"
     ;;
   "Ubuntu")
@@ -948,16 +948,16 @@ case $platform in
       "24.04") deb_codename="noble";;
     esac
     filetype="deb"
-    filename="${collection}-release-${deb_codename}.deb"
+    filename="${collection}-release-ubuntu${platform_version}.deb"
     download_url="${apt_source}/${filename}"
     ;;
   "mac_os_x")
     info "Mac platform! Lets get you a DMG..."
     filetype="dmg"
     if test "$version" = "latest"; then
-      filename="puppet-agent-latest.dmg"
+      filename="openvox-agent-latest.dmg"
     else
-      filename="puppet-agent-${version}-1.osx${platform_version}.dmg"
+      filename="openvox-agent-${version}-1.osx${platform_version}.dmg"
     fi
 
     arch="x86_64"
